@@ -1,0 +1,13 @@
+.payroll-accordion{display:flex;flex-direction:column;gap:10px}
+.company-payroll{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.company-summary{width:100%;border:0;background:#fff;padding:15px;display:grid;grid-template-columns:24px 1.4fr repeat(5,1fr) auto;align-items:center;gap:10px;text-align:left;color:var(--ink)}
+.company-summary:hover{background:#fafcff}
+.company-summary span{font-size:10px;color:var(--muted)}
+.company-chevron{font-size:22px!important;transition:.2s}
+.company-payroll.open .company-chevron{transform:rotate(90deg)}
+.company-details{display:none;border-top:1px solid var(--line)}
+.company-payroll.open .company-details{display:block}
+.payroll-detail-row td{font-size:11px}
+.allocation-editor label{display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted)}
+.allocation-editor label input{border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--ink)}
+@media(max-width:1100px){.company-summary{grid-template-columns:24px 1.4fr repeat(3,1fr) auto}.company-summary span:nth-of-type(4),.company-summary span:nth-of-type(5){display:none}}
