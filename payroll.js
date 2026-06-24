@@ -103,6 +103,97 @@
     });
   }
 
+  function sumByLine(records, month) {
+    return (records || [])
+      .filter((row) => row.month === month && row.lineId)
+      .reduce((map, row) => {
+        map[row.lineId] = (map[row.lineId] || 0) + Number(row.amount || 0);
+        return map;
+      }, {});
+  }
+
+  function calculateBusinessAccounting(data, month) {
+    const payrollRows = calculateGroupPayroll(
+      data.employees,
+      data.monthlyContributionSnapshots,
+      month,
+      data.monthlyPerformanceRecords
+    );
+
+    const lineMap = Object.fromEntries(data.productLines.map((line) => [line.id, line]));
+    const revenueByLine = sumByLine(data.monthlyRevenueRecords, month);
+    const directCostByLine = sumByLine(data.monthlyDirectCostRecords, month);
+    const directExpenseByLine = sumByLine((data.monthlyExpenseRecords || []).filter((row) => row.allocationMode === "direct"), month);
+    const sharedExpenses = (data.monthlyExpenseRecords || [])
+      .filter((row) => row.month === month && row.allocationMode === "shared")
+      .reduce((sum, row) => sum + Number(row.amount || 0), 0);
+
+    const laborByLine = {};
+    let sharedLaborPool = 0;
+
+    payrollRows.forEach((row) => {
+      const employee = data.employees.find((item) => item.id === row.employeeId);
+      const laborCost = Number(row.employerCost || row.salaryTotal || 0);
+      if (employee.costAttribution === "sharedLaborPool") {
+        sharedLaborPool += laborCost;
+        return;
+      }
+      (employee.allocations || []).forEach((allocation) => {
+        laborByLine[allocation.lineId] = (laborByLine[allocation.lineId] || 0) + laborCost * allocation.percent / 100;
+      });
+    });
+
+    const totalRevenue = Object.values(revenueByLine).reduce((sum, value) => sum + value, 0);
+    const sharedPool = sharedExpenses + sharedLaborPool;
+
+    const rows = data.productLines.map((line) => {
+      const revenue = revenueByLine[line.id] || 0;
+      const directCost = directCostByLine[line.id] || 0;
+      const laborCost = laborByLine[line.id] || 0;
+      const departmentExpense = directExpenseByLine[line.id] || 0;
+      const allocatedExpense = totalRevenue ? sharedPool * revenue / totalRevenue : 0;
+      const profit = revenue - directCost - laborCost - departmentExpense - allocatedExpense;
+      const costAndExpense = directCost + laborCost + departmentExpense + allocatedExpense;
+      return {
+        lineId: line.id,
+        lineName: line.name,
+        color: line.color,
+        revenue: toMoney(revenue),
+        directCost: toMoney(directCost),
+        laborCost: toMoney(laborCost),
+        departmentExpense: toMoney(departmentExpense),
+        allocatedExpense: toMoney(allocatedExpense),
+        profit: toMoney(profit),
+        profitRate: revenue ? profit / revenue : 0,
+        laborCostRate: revenue ? laborCost / revenue : 0,
+        costExpenseRate: revenue ? costAndExpense / revenue : 0
+      };
+    });
+
+    const totals = rows.reduce((sum, row) => ({
+      revenue: sum.revenue + row.revenue,
+      directCost: sum.directCost + row.directCost,
+      laborCost: sum.laborCost + row.laborCost,
+      departmentExpense: sum.departmentExpense + row.departmentExpense,
+      allocatedExpense: sum.allocatedExpense + row.allocatedExpense,
+      profit: sum.profit + row.profit
+    }), { revenue:0, directCost:0, laborCost:0, departmentExpense:0, allocatedExpense:0, profit:0 });
+
+    Object.keys(totals).forEach((key) => { totals[key] = toMoney(totals[key]); });
+    totals.profitRate = totals.revenue ? totals.profit / totals.revenue : 0;
+    totals.laborCostRate = totals.revenue ? totals.laborCost / totals.revenue : 0;
+
+    return {
+      month,
+      rows,
+      totals,
+      sharedExpenses: toMoney(sharedExpenses),
+      sharedLaborPool: toMoney(sharedLaborPool),
+      allocationMethod: "revenue",
+      lineMap
+    };
+  }
+
   function summarizePayrollByCompany(results, companies) {
     return companies.map((company) => {
       const rows = results.filter((item) => item.companyId === company.id);
@@ -136,7 +227,7 @@
   window.PayrollDemo = {
     calculatePayroll, calculateTax, validateAllocations, allocateProductLineCosts,
     clampContributionBase, calculateShanghaiContributions,
-    calculateGroupPayroll, summarizePayrollByCompany, updateContributionSnapshots,
+    calculateGroupPayroll, calculateBusinessAccounting, summarizePayrollByCompany, updateContributionSnapshots,
     getMonthlyPerformanceScore, updateMonthlyPerformanceScore,
     toMoney, formatCurrency
   };

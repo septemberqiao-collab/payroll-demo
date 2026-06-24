@@ -46,12 +46,12 @@
   ];
 
   const employees = [
-    { id:"001", name:"林悦", department:"产品部", jobTitle:"产品经理", employmentType:"全日制", hireDate:"2025-07-01", regularDate:"2025-10-01", employeeStatus:"在职", companyId:"company-tech", baseSalary:14000, performanceBase:1000, socialBase:11895, bonus:1200, allowance:300, mealAllowance:450, attendanceDeduction:0, pension:951.6, medical:237.9, unemployment:59.48, housingFund:713.7, socialAdjustment:0, specialDeduction:2000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"招商银行 · 8842", status:"正常", allocations:[{lineId:"line-cloud",percent:70},{lineId:"line-overseas",percent:30}] },
-    { id:"002", name:"周航", department:"研发部", jobTitle:"高级工程师", employmentType:"全日制", hireDate:"2025-06-16", regularDate:"2025-09-16", employeeStatus:"在职", companyId:"company-tech", baseSalary:18000, performanceBase:2500, socialBase:12800, bonus:3000, allowance:500, mealAllowance:450, attendanceDeduction:0, pension:1024, medical:256, unemployment:64, housingFund:768, socialAdjustment:0, specialDeduction:1000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"工商银行 · 3167", status:"波动异常", allocations:[{lineId:"line-cloud",percent:100}] },
-    { id:"003", name:"陈思", department:"运营部", jobTitle:"运营主管", employmentType:"全日制", hireDate:"2025-08-04", regularDate:"2025-11-04", employeeStatus:"在职", companyId:"company-interactive", baseSalary:10500, performanceBase:1500, socialBase:10804, bonus:600, allowance:300, mealAllowance:420, attendanceDeduction:0, pension:864.32, medical:216.08, unemployment:54.02, housingFund:648.24, socialAdjustment:0, specialDeduction:1500, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"建设银行 · 0925", status:"正常", allocations:[{lineId:"line-ads",percent:60},{lineId:"line-enterprise",percent:40}] },
-    { id:"004", name:"顾宁", department:"财务部", jobTitle:"财务经理", employmentType:"全日制", hireDate:"2025-05-12", regularDate:"2025-08-12", employeeStatus:"在职", companyId:"company-digital", baseSalary:12500, performanceBase:1800, socialBase:10664, bonus:1000, allowance:400, mealAllowance:450, attendanceDeduction:0, pension:853.12, medical:213.28, unemployment:53.32, housingFund:639.84, socialAdjustment:0, specialDeduction:3000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"中国银行 · 7719", status:"正常", allocations:[{lineId:"line-enterprise",percent:100}] },
-    { id:"005", name:"唐可", department:"市场部", jobTitle:"市场专员", employmentType:"全日制", hireDate:"2025-11-10", regularDate:"2026-02-10", employeeStatus:"试用期", companyId:"company-interactive", baseSalary:9500, performanceBase:2000, socialBase:9751, bonus:4800, allowance:300, mealAllowance:400, attendanceDeduction:0, pension:780.08, medical:195.02, unemployment:48.76, housingFund:585.06, socialAdjustment:0, specialDeduction:1000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:500, compensation:0, bank:"浦发银行 · 4506", status:"波动异常", allocations:[{lineId:"line-overseas",percent:50},{lineId:"line-ads",percent:50}] },
-    { id:"006", name:"许安", department:"行政部", jobTitle:"行政专员", employmentType:"全日制", hireDate:"2025-12-01", regularDate:"2026-03-01", employeeStatus:"试用期", companyId:"company-digital", baseSalary:8500, performanceBase:1000, socialBase:7460, bonus:0, allowance:300, mealAllowance:390, attendanceDeduction:0, pension:596.8, medical:149.2, unemployment:37.3, housingFund:447.6, socialAdjustment:0, specialDeduction:0, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"交通银行 · 6281", status:"正常", allocations:[{lineId:"line-enterprise",percent:100}] }
+    { id:"001", name:"林悦", department:"产品部", jobTitle:"产品经理", employmentType:"全日制", hireDate:"2025-07-01", regularDate:"2025-10-01", employeeStatus:"在职", companyId:"company-tech", baseSalary:14000, performanceBase:1000, socialBase:11895, bonus:1200, allowance:300, mealAllowance:450, attendanceDeduction:0, pension:951.6, medical:237.9, unemployment:59.48, housingFund:713.7, socialAdjustment:0, specialDeduction:2000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"招商银行 · 8842", status:"正常", costAttribution:"directLabor", allocations:[{lineId:"line-cloud",percent:70},{lineId:"line-overseas",percent:30}] },
+    { id:"002", name:"周航", department:"研发部", jobTitle:"高级工程师", employmentType:"全日制", hireDate:"2025-06-16", regularDate:"2025-09-16", employeeStatus:"在职", companyId:"company-tech", baseSalary:18000, performanceBase:2500, socialBase:12800, bonus:3000, allowance:500, mealAllowance:450, attendanceDeduction:0, pension:1024, medical:256, unemployment:64, housingFund:768, socialAdjustment:0, specialDeduction:1000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"工商银行 · 3167", status:"波动异常", costAttribution:"directLabor", allocations:[{lineId:"line-cloud",percent:100}] },
+    { id:"003", name:"陈思", department:"运营部", jobTitle:"运营主管", employmentType:"全日制", hireDate:"2025-08-04", regularDate:"2025-11-04", employeeStatus:"在职", companyId:"company-interactive", baseSalary:10500, performanceBase:1500, socialBase:10804, bonus:600, allowance:300, mealAllowance:420, attendanceDeduction:0, pension:864.32, medical:216.08, unemployment:54.02, housingFund:648.24, socialAdjustment:0, specialDeduction:1500, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"建设银行 · 0925", status:"正常", costAttribution:"directLabor", allocations:[{lineId:"line-ads",percent:60},{lineId:"line-enterprise",percent:40}] },
+    { id:"004", name:"顾宁", department:"财务部", jobTitle:"财务经理", employmentType:"全日制", hireDate:"2025-05-12", regularDate:"2025-08-12", employeeStatus:"在职", companyId:"company-digital", baseSalary:12500, performanceBase:1800, socialBase:10664, bonus:1000, allowance:400, mealAllowance:450, attendanceDeduction:0, pension:853.12, medical:213.28, unemployment:53.32, housingFund:639.84, socialAdjustment:0, specialDeduction:3000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"中国银行 · 7719", status:"正常", costAttribution:"sharedLaborPool", allocations:[{lineId:"line-enterprise",percent:100}] },
+    { id:"005", name:"唐可", department:"市场部", jobTitle:"市场专员", employmentType:"全日制", hireDate:"2025-11-10", regularDate:"2026-02-10", employeeStatus:"试用期", companyId:"company-interactive", baseSalary:9500, performanceBase:2000, socialBase:9751, bonus:4800, allowance:300, mealAllowance:400, attendanceDeduction:0, pension:780.08, medical:195.02, unemployment:48.76, housingFund:585.06, socialAdjustment:0, specialDeduction:1000, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:500, compensation:0, bank:"浦发银行 · 4506", status:"波动异常", costAttribution:"directLabor", allocations:[{lineId:"line-overseas",percent:50},{lineId:"line-ads",percent:50}] },
+    { id:"006", name:"许安", department:"行政部", jobTitle:"行政专员", employmentType:"全日制", hireDate:"2025-12-01", regularDate:"2026-03-01", employeeStatus:"试用期", companyId:"company-digital", baseSalary:8500, performanceBase:1000, socialBase:7460, bonus:0, allowance:300, mealAllowance:390, attendanceDeduction:0, pension:596.8, medical:149.2, unemployment:37.3, housingFund:447.6, socialAdjustment:0, specialDeduction:0, previousTaxableIncome:0, previousTax:0, afterTaxSubsidy:0, compensation:0, bank:"交通银行 · 6281", status:"正常", costAttribution:"sharedLaborPool", allocations:[{lineId:"line-enterprise",percent:100}] }
   ];
 
   const monthlyPerformanceRecords = [
@@ -154,11 +154,45 @@
     };
   });
 
+  const monthlyRevenueRecords = [
+    { month:"2026-01", companyId:"company-tech", lineId:"line-cloud", amount:1280000, source:"营收导入", note:"云游戏平台订阅与服务收入" },
+    { month:"2026-01", companyId:"company-interactive", lineId:"line-overseas", amount:860000, source:"营收导入", note:"海外发行流水分成" },
+    { month:"2026-01", companyId:"company-interactive", lineId:"line-ads", amount:620000, source:"营收导入", note:"广告商业化收入" },
+    { month:"2026-01", companyId:"company-digital", lineId:"line-enterprise", amount:740000, source:"营收导入", note:"企业服务项目收入" },
+    { month:"2025-12", companyId:"company-tech", lineId:"line-cloud", amount:1160000, source:"历史快照", note:"上月环比基数" },
+    { month:"2025-12", companyId:"company-interactive", lineId:"line-overseas", amount:790000, source:"历史快照", note:"上月环比基数" },
+    { month:"2025-12", companyId:"company-interactive", lineId:"line-ads", amount:580000, source:"历史快照", note:"上月环比基数" },
+    { month:"2025-12", companyId:"company-digital", lineId:"line-enterprise", amount:710000, source:"历史快照", note:"上月环比基数" }
+  ];
+
+  const monthlyDirectCostRecords = [
+    { month:"2026-01", companyId:"company-tech", lineId:"line-cloud", amount:338000, category:"云资源与版权", source:"成本导入" },
+    { month:"2026-01", companyId:"company-interactive", lineId:"line-overseas", amount:226000, category:"渠道分成", source:"成本导入" },
+    { month:"2026-01", companyId:"company-interactive", lineId:"line-ads", amount:148000, category:"广告流量成本", source:"成本导入" },
+    { month:"2026-01", companyId:"company-digital", lineId:"line-enterprise", amount:185000, category:"交付外包", source:"成本导入" }
+  ];
+
+  const monthlyExpenseRecords = [
+    { month:"2026-01", companyId:"company-tech", department:"产品中心", expenseType:"研发费用", amount:92000, allocationMode:"direct", lineId:"line-cloud", note:"产品迭代专项" },
+    { month:"2026-01", companyId:"company-interactive", department:"市场部", expenseType:"市场费用", amount:76000, allocationMode:"direct", lineId:"line-overseas", note:"海外投放素材" },
+    { month:"2026-01", companyId:"company-interactive", department:"商业化中心", expenseType:"市场费用", amount:54000, allocationMode:"direct", lineId:"line-ads", note:"广告客户活动" },
+    { month:"2026-01", companyId:"company-digital", department:"企业服务部", expenseType:"差旅费用", amount:39000, allocationMode:"direct", lineId:"line-enterprise", note:"客户交付差旅" },
+    { month:"2026-01", companyId:"company-digital", department:"财务部", expenseType:"行政费用", amount:68000, allocationMode:"shared", lineId:null, note:"集团共享部门费用" },
+    { month:"2026-01", companyId:"company-digital", department:"行政部", expenseType:"办公费用", amount:42000, allocationMode:"shared", lineId:null, note:"公共办公费用池" }
+  ];
+
+  const allocationRules = [
+    { id:"rule-revenue-share", name:"按营收占比分摊", month:"2026-01", companyId:"group", poolType:"全部公共费用", method:"revenue", status:"启用" },
+    { id:"rule-headcount-share", name:"按人数占比分摊", month:"2026-01", companyId:"group", poolType:"全部公共费用", method:"headcount", status:"备选" },
+    { id:"rule-manual-share", name:"手工比例分摊", month:"2026-01", companyId:"group", poolType:"全部公共费用", method:"manual", status:"备选" }
+  ];
+
   window.PayrollGroupData = {
     companies, productLines, employees, annualTaxRows, taxEntities,
     reportingRows, payslipBatches, confirmationRows, socialBills,
     specialDeductionPolicies, shanghaiSocialPolicy,
     shanghaiHousingFundPolicy, policyVersions,
-    monthlyContributionSnapshots, payrollRuns, monthlyPerformanceRecords
+    monthlyContributionSnapshots, payrollRuns, monthlyPerformanceRecords,
+    monthlyRevenueRecords, monthlyDirectCostRecords, monthlyExpenseRecords, allocationRules
   };
 }());

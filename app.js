@@ -9,6 +9,10 @@
   let payrollRunVersion = data.payrollRuns[0]?.version || "P0";
 
   const pageMeta = {
+    "business-dashboard":["经营核算工作台","GROUP BUSINESS ACCOUNTING"],
+    "product-accounting":["产品线核算","PRODUCT LINE P&L"],
+    "expense-collection":["费用归集","EXPENSE COLLECTION"],
+    "allocation-rules":["分摊规则","ALLOCATION RULES"],
     dashboard:["集团薪酬工作台","GROUP PAYROLL"],
     "payroll-workbench":["薪资计算工作台","PAYROLL WORKBENCH"],
     "salary-profiles":["薪资档案","SALARY PROFILES"],
@@ -50,6 +54,74 @@
 
   function metric(label,value,note,good=false) {
     return `<article class="metric-card"><span>${label}</span><strong>${value}</strong><small class="${good?"good":""}">${note}</small></article>`;
+  }
+
+  function renderAccountingTable(rows){
+    return `<article class="panel wide">
+      <div class="panel-head"><div><p class="eyebrow">PRODUCT LINE DETAIL</p><h3>产品线经营明细</h3></div><span class="muted">营收 - 直接成本 - 人工成本 - 部门费用 - 公共分摊费用 = 利润</span></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>产品线</th><th>营收</th><th>直接成本</th><th>人工成本</th><th>部门费用</th><th>公共分摊费用</th><th>利润</th><th>利润率</th><th>人工成本率</th></tr></thead>
+        <tbody>${rows.map(row=>`<tr>
+          <td><span class="dot" style="background:${row.color}"></span>${row.lineName}</td>
+          <td>${payroll.formatCurrency(row.revenue)}</td>
+          <td>${payroll.formatCurrency(row.directCost)}</td>
+          <td>${payroll.formatCurrency(row.laborCost)}</td>
+          <td>${payroll.formatCurrency(row.departmentExpense)}</td>
+          <td>${payroll.formatCurrency(row.allocatedExpense)}</td>
+          <td><strong>${payroll.formatCurrency(row.profit)}</strong></td>
+          <td><span class="badge ${row.profitRate>0.25?"success":"info"}">${(row.profitRate*100).toFixed(1)}%</span></td>
+          <td>${(row.laborCostRate*100).toFixed(1)}%</td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+    </article>`;
+  }
+
+  function renderBusinessDashboard(){
+    const accounting = payroll.calculateBusinessAccounting(data, "2026-01");
+    const sorted = [...accounting.rows].sort((a,b)=>b.profit-a.profit);
+    const maxProfit = Math.max(...sorted.map(row=>row.profit), 1);
+    document.getElementById("business-dashboard-root").innerHTML =
+      sectionHeader("GROUP BUSINESS ACCOUNTING","集团经营核算平台","按月汇总营收、直接成本、人工成本、费用分摊和利润，薪酬核算自动进入产品线人工成本。",`<button class="button ghost">导入营收成本</button><button class="button primary">生成本月核算</button>`) +
+      `<div class="metric-grid">
+        ${metric("集团总营收",payroll.formatCurrency(accounting.totals.revenue),"2026 年 1 月",true)}
+        ${metric("集团总利润",payroll.formatCurrency(accounting.totals.profit),`利润率 ${(accounting.totals.profitRate*100).toFixed(1)}%`,true)}
+        ${metric("人工成本",payroll.formatCurrency(accounting.totals.laborCost),`人工成本率 ${(accounting.totals.laborCostRate*100).toFixed(1)}%`)}
+        ${metric("公共分摊费用",payroll.formatCurrency(accounting.totals.allocatedExpense),"默认按营收占比分摊")}
+      </div>
+      <div class="chart-layout">
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">PROFIT RANKING</p><h3>产品线利润排行</h3></div><span class="muted">点击产品线查看明细</span></div>
+          <div class="bar-chart">${sorted.map(row=>`<div class="bar-row" data-view-jump="product-accounting"><label>${row.lineName}</label><div class="bar-track"><div class="bar-fill" style="width:${Math.max(8,row.profit/maxProfit*100)}%;background:${row.color}"></div></div><strong>${payroll.formatCurrency(row.profit)}</strong></div>`).join("")}</div>
+        </article>
+        <article class="panel">
+          <div class="panel-head"><div><p class="eyebrow">ALLOCATION</p><h3>公共费用池</h3></div><span class="badge info">按营收占比</span></div>
+          <div class="summary-list">
+            <div><span>共享人工成本池</span><strong>${payroll.formatCurrency(accounting.sharedLaborPool)}</strong></div>
+            <div><span>共享部门费用池</span><strong>${payroll.formatCurrency(accounting.sharedExpenses)}</strong></div>
+            <div><span>本月分摊合计</span><strong>${payroll.formatCurrency(accounting.totals.allocatedExpense)}</strong></div>
+          </div>
+        </article>
+      </div>
+      ${renderAccountingTable(accounting.rows)}`;
+  }
+
+  function renderProductAccounting(){
+    const accounting = payroll.calculateBusinessAccounting(data, "2026-01");
+    document.getElementById("product-accounting-root").innerHTML =
+      sectionHeader("PRODUCT LINE P&L","产品线核算","查看每条产品业务线的营收、成本、人工成本、费用和利润。",`<button class="button ghost">导入营收</button><button class="button ghost">导入直接成本</button>`) +
+      renderAccountingTable(accounting.rows);
+  }
+
+  function renderExpenseCollection(){
+    document.getElementById("expense-collection-root").innerHTML =
+      sectionHeader("EXPENSE COLLECTION","费用归集","按公司、部门和费用类型录入费用，可直接计入产品线或进入公共费用池。",`<button class="button primary">+ 新增费用</button>`) +
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>月份</th><th>公司</th><th>部门</th><th>费用类型</th><th>金额</th><th>归集方式</th><th>产品线</th><th>备注</th></tr></thead><tbody>${data.monthlyExpenseRecords.map(row=>`<tr><td>${row.month}</td><td>${companyMap[row.companyId]?.shortName||"集团"}</td><td>${row.department}</td><td>${row.expenseType}</td><td>${payroll.formatCurrency(row.amount)}</td><td>${row.allocationMode==="shared"?"公共费用池":"直接计入"}</td><td>${lineMap[row.lineId]?.name||"—"}</td><td>${row.note}</td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderAllocationRules(){
+    document.getElementById("allocation-rules-root").innerHTML =
+      sectionHeader("ALLOCATION RULES","分摊规则","公共费用和共享人工成本默认按营收占比分摊，同时保留按人数和手工比例。",`<button class="button primary">+ 新增规则</button>`) +
+      `<div class="cards-grid">${data.allocationRules.map(rule=>`<article class="settings-card"><span class="badge ${rule.status==="启用"?"success":"info"}">${rule.status}</span><h3>${rule.name}</h3><p>${rule.poolType} · ${rule.month}</p><p>方法：${rule.method==="revenue"?"按营收占比":rule.method==="headcount"?"按人数占比":"手工比例"}</p></article>`).join("")}</div>`;
   }
 
   function renderDashboard() {
@@ -186,7 +258,7 @@
   }
 
   function renderAll() {
-    renderDashboard();renderPayrollWorkbench();renderSalaryProfiles();renderSpecialDeductions();renderAnnualTax();renderTaxEntities();renderPersonReporting();renderPayslipBatches();renderConfirmations();renderInsuredEmployees();renderSocialBills();renderCostDashboard();renderPayrollReports();renderGroupSettings();
+    renderBusinessDashboard();renderProductAccounting();renderExpenseCollection();renderAllocationRules();renderDashboard();renderPayrollWorkbench();renderSalaryProfiles();renderSpecialDeductions();renderAnnualTax();renderTaxEntities();renderPersonReporting();renderPayslipBatches();renderConfirmations();renderInsuredEmployees();renderSocialBills();renderCostDashboard();renderPayrollReports();renderGroupSettings();
   }
 
   function openModal(html){document.getElementById("modal-content").innerHTML=html;document.getElementById("detail-modal").classList.add("open")}
