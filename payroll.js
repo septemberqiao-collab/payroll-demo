@@ -310,7 +310,7 @@
   }
 
   function updateContributionSnapshots(snapshots, employeeId, effectiveMonth, socialBase, housingFundBase, reason) {
-    const affected = ["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06"].filter((month)=>month>=effectiveMonth);
+    const affected = Array.from({ length: 12 }, (_, index) => `2026-${String(index + 1).padStart(2, "0")}`).filter((month)=>month>=effectiveMonth);
     affected.forEach((month) => {
       const target = snapshots.find((item)=>item.employeeId===employeeId&&item.month===month);
       if (target) {
