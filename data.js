@@ -187,12 +187,63 @@
     { id:"rule-manual-share", name:"手工比例分摊", month:"2026-01", companyId:"group", poolType:"全部公共费用", method:"manual", status:"备选" }
   ];
 
+  const revenueCollectionRows = [
+    { id:"rev-001", month:"2026-01", platform:"云游戏平台", account:"Cloud-A", companyId:"company-tech", lineId:"line-cloud", income:1280000, channelFee:46000, taxFee:22000, settlementAmount:1212000, attachment:"云游戏平台_2026-01.xlsx", matchStatus:"已匹配" },
+    { id:"rev-002", month:"2026-01", platform:"海外发行平台", account:"Overseas-Store", companyId:"company-interactive", lineId:"line-overseas", income:860000, channelFee:31000, taxFee:18000, settlementAmount:811000, attachment:"海外发行_2026-01.xlsx", matchStatus:"已匹配" },
+    { id:"rev-003", month:"2026-01", platform:"广告商业化", account:"Ads-Main", companyId:"company-interactive", lineId:"line-ads", income:620000, channelFee:21000, taxFee:12000, settlementAmount:587000, attachment:"广告商业化_2026-01.xlsx", matchStatus:"已匹配" },
+    { id:"rev-004", month:"2026-01", platform:"企业服务合同", account:"Enterprise-Project", companyId:"company-digital", lineId:"line-enterprise", income:740000, channelFee:8000, taxFee:15000, settlementAmount:717000, attachment:"企业服务_2026-01.xlsx", matchStatus:"已匹配" }
+  ];
+
+  const costCollectionRows = [
+    { id:"cost-001", month:"2026-01", department:"产品中心", supplier:"云资源供应商A", costType:"云资源成本", companyId:"company-tech", lineId:"line-cloud", amount:338000, isShared:false, attachment:"云资源账单.pdf", auditStatus:"已审核" },
+    { id:"cost-002", month:"2026-01", department:"海外事业部", supplier:"渠道合作方B", costType:"渠道分成", companyId:"company-interactive", lineId:"line-overseas", amount:226000, isShared:false, attachment:"渠道分成账单.xlsx", auditStatus:"已审核" },
+    { id:"cost-003", month:"2026-01", department:"商业化中心", supplier:"广告流量平台C", costType:"广告流量成本", companyId:"company-interactive", lineId:"line-ads", amount:148000, isShared:false, attachment:"广告流量账单.xlsx", auditStatus:"已审核" },
+    { id:"cost-004", month:"2026-01", department:"企业服务部", supplier:"交付外包团队D", costType:"交付外包", companyId:"company-digital", lineId:"line-enterprise", amount:185000, isShared:false, attachment:"外包结算单.pdf", auditStatus:"待复核" }
+  ];
+
+  const dingtalkExpenseRows = [
+    { id:"dt-202601-001", applicant:"唐可", department:"市场部", expenseType:"市场费用", companyId:"company-interactive", lineId:"line-overseas", amount:76000, month:"2026-01", isShared:false, approvalStatus:"审批完成", attachment:"钉钉审批附件" },
+    { id:"dt-202601-002", applicant:"顾宁", department:"财务部", expenseType:"行政费用", companyId:"company-digital", lineId:null, amount:68000, month:"2026-01", isShared:true, approvalStatus:"审批完成", attachment:"钉钉审批附件" },
+    { id:"dt-202601-003", applicant:"许安", department:"行政部", expenseType:"办公费用", companyId:"company-digital", lineId:null, amount:42000, month:"2026-01", isShared:true, approvalStatus:"审批完成", attachment:"钉钉审批附件" },
+    { id:"dt-202601-004", applicant:"陈思", department:"运营部", expenseType:"差旅费用", companyId:"company-interactive", lineId:"line-ads", amount:12500, month:"2026-01", isShared:false, approvalStatus:"待审核", attachment:"钉钉审批附件" }
+  ];
+
+  const dataMatchingRules = [
+    { id:"match-001", type:"平台账号", source:"Cloud-A", target:"line-cloud", targetName:"云游戏平台", status:"启用" },
+    { id:"match-002", type:"平台账号", source:"Overseas-Store", target:"line-overseas", targetName:"海外发行", status:"启用" },
+    { id:"match-003", type:"供应商", source:"云资源供应商A", target:"云资源成本", targetName:"直接成本", status:"启用" },
+    { id:"match-004", type:"部门", source:"财务部", target:"shared-cost-pool", targetName:"公共费用池", status:"启用" },
+    { id:"match-005", type:"钉钉费用类型", source:"市场费用", target:"marketing-expense", targetName:"费用成本", status:"启用" }
+  ];
+
+  const collectionExceptionRows = [
+    { id:"ex-001", source:"成本账单", issue:"供应商未匹配", description:"新增供应商 E 尚未配置成本类型", amount:28000, status:"待处理" },
+    { id:"ex-002", source:"钉钉费用", issue:"审批未完成", description:"运营部差旅费用仍在审批中", amount:12500, status:"待审核" },
+    { id:"ex-003", source:"营收账单", issue:"附件缺失", description:"测试平台小额收入缺少原始对账单", amount:9600, status:"退回补充" }
+  ];
+
+  const collectionLogs = [
+    { id:"log-001", source:"营收账单", action:"导入", operator:"财务管理员", operatedAt:"2026-02-03 10:20", success:4, exceptions:1, mode:"新增", status:"完成" },
+    { id:"log-002", source:"成本账单", action:"上传", operator:"业务负责人", operatedAt:"2026-02-04 15:40", success:4, exceptions:1, mode:"新增", status:"待复核" },
+    { id:"log-003", source:"钉钉费用", action:"同步", operator:"系统任务", operatedAt:"2026-02-05 09:00", success:3, exceptions:1, mode:"覆盖", status:"存在异常" },
+    { id:"log-004", source:"薪资数据", action:"内部带入", operator:"薪酬核算", operatedAt:"2026-02-06 10:26", success:6, exceptions:0, mode:"覆盖", status:"完成" }
+  ];
+
+  const executiveBudgetRows = [
+    { month:"2026-01", lineId:"line-cloud", revenueBudget:1250000, costBudget:520000, expenseBudget:120000, grossProfitTarget:730000, netProfitTarget:610000, owner:"产品中心", varianceReason:"云资源成本略高于预算" },
+    { month:"2026-01", lineId:"line-overseas", revenueBudget:900000, costBudget:360000, expenseBudget:120000, grossProfitTarget:540000, netProfitTarget:420000, owner:"海外事业部", varianceReason:"投放费用按计划释放" },
+    { month:"2026-01", lineId:"line-ads", revenueBudget:700000, costBudget:300000, expenseBudget:90000, grossProfitTarget:400000, netProfitTarget:310000, owner:"商业化中心", varianceReason:"广告收入低于预算" },
+    { month:"2026-01", lineId:"line-enterprise", revenueBudget:760000, costBudget:280000, expenseBudget:95000, grossProfitTarget:480000, netProfitTarget:385000, owner:"企业服务部", varianceReason:"交付外包成本待复核" }
+  ];
+
   window.PayrollGroupData = {
     companies, productLines, employees, annualTaxRows, taxEntities,
     reportingRows, payslipBatches, confirmationRows, socialBills,
     specialDeductionPolicies, shanghaiSocialPolicy,
     shanghaiHousingFundPolicy, policyVersions,
     monthlyContributionSnapshots, payrollRuns, monthlyPerformanceRecords,
-    monthlyRevenueRecords, monthlyDirectCostRecords, monthlyExpenseRecords, allocationRules
+    monthlyRevenueRecords, monthlyDirectCostRecords, monthlyExpenseRecords, allocationRules,
+    revenueCollectionRows, costCollectionRows, dingtalkExpenseRows,
+    dataMatchingRules, collectionExceptionRows, collectionLogs, executiveBudgetRows
   };
 }());

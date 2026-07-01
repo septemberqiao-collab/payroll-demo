@@ -132,7 +132,7 @@
     let sharedLaborPool = 0;
 
     payrollRows.forEach((row) => {
-      const employee = data.employees.find((item) => item.id === row.employeeId);
+      const employee = data.employees.find((item) => item.id === row.id);
       const laborCost = Number(row.employerCost || row.salaryTotal || 0);
       if (employee.costAttribution === "sharedLaborPool") {
         sharedLaborPool += laborCost;
@@ -153,6 +153,8 @@
       const departmentExpense = directExpenseByLine[line.id] || 0;
       const allocatedExpense = totalRevenue ? sharedPool * revenue / totalRevenue : 0;
       const profit = revenue - directCost - laborCost - departmentExpense - allocatedExpense;
+      const grossProfit = revenue - directCost;
+      const expense = departmentExpense + allocatedExpense;
       const costAndExpense = directCost + laborCost + departmentExpense + allocatedExpense;
       return {
         lineId: line.id,
@@ -164,6 +166,11 @@
         departmentExpense: toMoney(departmentExpense),
         allocatedExpense: toMoney(allocatedExpense),
         profit: toMoney(profit),
+        grossProfit: toMoney(grossProfit),
+        grossProfitRate: revenue ? grossProfit / revenue : 0,
+        expense: toMoney(expense),
+        netProfit: toMoney(profit),
+        netProfitRate: revenue ? profit / revenue : 0,
         profitRate: revenue ? profit / revenue : 0,
         laborCostRate: revenue ? laborCost / revenue : 0,
         costExpenseRate: revenue ? costAndExpense / revenue : 0
@@ -182,6 +189,11 @@
     Object.keys(totals).forEach((key) => { totals[key] = toMoney(totals[key]); });
     totals.profitRate = totals.revenue ? totals.profit / totals.revenue : 0;
     totals.laborCostRate = totals.revenue ? totals.laborCost / totals.revenue : 0;
+    totals.grossProfit = toMoney(totals.revenue - totals.directCost);
+    totals.grossProfitRate = totals.revenue ? totals.grossProfit / totals.revenue : 0;
+    totals.expense = toMoney(totals.departmentExpense + totals.allocatedExpense);
+    totals.netProfit = totals.profit;
+    totals.netProfitRate = totals.profitRate;
 
     return {
       month,
@@ -191,6 +203,92 @@
       sharedLaborPool: toMoney(sharedLaborPool),
       allocationMethod: "revenue",
       lineMap
+    };
+  }
+
+  function calculateCostManagement(data, month) {
+    const accounting = calculateBusinessAccounting(data, month);
+    const totalCost = toMoney(accounting.totals.directCost + accounting.totals.laborCost + accounting.totals.departmentExpense + accounting.totals.allocatedExpense);
+    const rows = accounting.rows.map((row) => {
+      const rowTotalCost = toMoney(row.directCost + row.laborCost + row.departmentExpense + row.allocatedExpense);
+      return Object.assign({}, row, {
+        totalCost: rowTotalCost,
+        totalCostRate: row.revenue ? rowTotalCost / row.revenue : 0
+      });
+    });
+    return {
+      month,
+      rows,
+      totals: Object.assign({}, accounting.totals, {
+        totalCost,
+        totalCostRate: accounting.totals.revenue ? totalCost / accounting.totals.revenue : 0
+      }),
+      sharedLaborPool: accounting.sharedLaborPool,
+      sharedExpenses: accounting.sharedExpenses
+    };
+  }
+
+  function calculateExecutiveReport(data, month) {
+    const cost = calculateCostManagement(data, month);
+    const exceptionCount = (data.collectionExceptionRows || []).length;
+    const budgetRows = (data.executiveBudgetRows || []).filter((row) => row.month === month);
+    const budgetMap = Object.fromEntries(budgetRows.map((row) => [row.lineId, row]));
+
+    const alertRows = cost.rows.map((row) => {
+      const totalCostRate = row.totalCostRate || 0;
+      let warningLevel = "green";
+      let warningReason = "经营状态健康";
+      let actionSuggestion = "保持当前经营节奏，持续跟踪成本率";
+      if (row.netProfit < 0 || row.netProfitRate < 0) {
+        warningLevel = "red";
+        warningReason = "净利为负";
+        actionSuggestion = "复核收入确认、直接成本和费用投放，形成专项改善动作";
+      } else if (row.netProfitRate < 0.12 || totalCostRate > 0.65) {
+        warningLevel = "yellow";
+        warningReason = "净利率偏低或成本率偏高";
+        actionSuggestion = "重点检查成本结构和公共成本分摊占比";
+      }
+      return Object.assign({}, row, { warningLevel, warningReason, actionSuggestion });
+    });
+
+    const budgetAttainmentRows = cost.rows.map((row) => {
+      const budget = budgetMap[row.lineId] || {};
+      const revenueBudget = Number(budget.revenueBudget || 0);
+      const netProfitTarget = Number(budget.netProfitTarget || 0);
+      const budgetCompletionRate = revenueBudget ? row.revenue / revenueBudget : 0;
+      const varianceAmount = row.revenue - revenueBudget;
+      const netProfitVariance = row.netProfit - netProfitTarget;
+      return Object.assign({}, row, budget, {
+        revenueBudget,
+        netProfitTarget,
+        budgetCompletionRate,
+        varianceAmount: toMoney(varianceAmount),
+        netProfitVariance: toMoney(netProfitVariance),
+        attainmentStatus: budgetCompletionRate >= 1 ? "达成" : budgetCompletionRate >= 0.8 ? "基本达成" : "未达成"
+      });
+    });
+
+    const redCount = alertRows.filter((row) => row.warningLevel === "red").length;
+    const yellowCount = alertRows.filter((row) => row.warningLevel === "yellow").length;
+    const topLine = [...cost.rows].sort((a, b) => b.netProfit - a.netProfit)[0];
+    const executiveSummary = [
+      `本月集团收入 ${formatCurrency(cost.totals.revenue)}，净利 ${formatCurrency(cost.totals.netProfit)}，净利率 ${(cost.totals.netProfitRate * 100).toFixed(1)}%。`,
+      `本月毛利 ${formatCurrency(cost.totals.grossProfit)}，毛利率 ${(cost.totals.grossProfitRate * 100).toFixed(1)}%，费用及公共分摊合计 ${formatCurrency(cost.totals.expense)}。`,
+      `净利贡献最高的产品线为 ${topLine?.lineName || "—"}，贡献净利 ${formatCurrency(topLine?.netProfit || 0)}。`,
+      `当前共有 ${redCount} 条红色预警、${yellowCount} 条黄色关注，异常数据 ${exceptionCount} 条。`,
+      "建议下月重点复核低净利率产品线的成本结构，并持续跟进公共人工成本分摊。"
+    ];
+
+    return {
+      month,
+      totals: Object.assign({}, cost.totals, {
+        exceptionCount,
+        alertCount: redCount + yellowCount,
+        budgetCompletionRate: budgetAttainmentRows.length ? budgetAttainmentRows.reduce((sum, row) => sum + row.budgetCompletionRate, 0) / budgetAttainmentRows.length : 0
+      }),
+      alertRows,
+      budgetAttainmentRows,
+      executiveSummary
     };
   }
 
@@ -227,7 +325,7 @@
   window.PayrollDemo = {
     calculatePayroll, calculateTax, validateAllocations, allocateProductLineCosts,
     clampContributionBase, calculateShanghaiContributions,
-    calculateGroupPayroll, calculateBusinessAccounting, summarizePayrollByCompany, updateContributionSnapshots,
+    calculateGroupPayroll, calculateBusinessAccounting, calculateCostManagement, calculateExecutiveReport, summarizePayrollByCompany, updateContributionSnapshots,
     getMonthlyPerformanceScore, updateMonthlyPerformanceScore,
     toMoney, formatCurrency
   };

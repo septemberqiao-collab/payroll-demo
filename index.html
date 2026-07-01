@@ -13,10 +13,41 @@
       <div class="brand"><div class="brand-mark">核</div><div><strong>核算通</strong><span>集团经营核算平台</span></div></div>
       <nav class="nav-list">
         <button class="nav-link active" data-view="business-dashboard"><span class="nav-icon">⌂</span><b>经营核算工作台</b></button>
+        <div class="nav-group open" id="group-executive">
+          <button class="nav-group-title" data-nav-group="group-executive"><span>策</span><b>高层汇报中心</b><i>⌄</i></button>
+          <div class="nav-children">
+            <button class="nav-link" data-view="executive-dashboard">经营驾驶舱</button>
+            <button class="nav-link" data-view="executive-summary">经营分析摘要</button>
+            <button class="nav-link" data-view="product-line-alerts">产品线预警</button>
+            <button class="nav-link" data-view="budget-attainment">预算达成</button>
+          </div>
+        </div>
+        <div class="nav-group open" id="group-collection">
+          <button class="nav-group-title" data-nav-group="group-collection"><span>采</span><b>数据采集中心</b><i>⌄</i></button>
+          <div class="nav-children">
+            <button class="nav-link" data-view="collection-dashboard">采集工作台</button>
+            <button class="nav-link" data-view="revenue-collection">营收账单采集</button>
+            <button class="nav-link" data-view="cost-collection">成本账单采集</button>
+            <button class="nav-link" data-view="dingtalk-expense-collection">钉钉费用采集</button>
+            <button class="nav-link" data-view="matching-rules">数据匹配规则</button>
+            <button class="nav-link" data-view="collection-exceptions">异常数据处理</button>
+            <button class="nav-link" data-view="collection-logs">采集日志</button>
+          </div>
+        </div>
         <button class="nav-link" data-view="product-accounting"><span class="nav-icon">▦</span><b>产品线核算</b></button>
+        <div class="nav-group open" id="group-cost">
+          <button class="nav-group-title" data-nav-group="group-cost"><span>本</span><b>成本管理</b><i>⌄</i></button>
+          <div class="nav-children">
+            <button class="nav-link" data-view="cost-dashboard-v2">成本工作台</button>
+            <button class="nav-link" data-view="direct-costs">直接成本</button>
+            <button class="nav-link" data-view="labor-costs">人工成本</button>
+            <button class="nav-link" data-view="expense-costs">费用成本</button>
+            <button class="nav-link" data-view="shared-cost-pool">公共成本池</button>
+          </div>
+        </div>
         <button class="nav-link" data-view="expense-collection"><span class="nav-icon">票</span><b>费用归集</b></button>
         <button class="nav-link" data-view="allocation-rules"><span class="nav-icon">↔</span><b>分摊规则</b></button>
-        <div class="nav-group open" id="group-payroll">
+        <div class="nav-group" id="group-payroll">
           <button class="nav-group-title" data-nav-group="group-payroll"><span>薪</span><b>薪酬核算</b><i>⌄</i></button>
           <div class="nav-children">
             <button class="nav-link" data-view="payroll-workbench">薪资计算工作台</button>
@@ -55,12 +86,27 @@
         <div class="top-actions">
           <label class="company-filter">所属公司<select id="global-company-filter"></select></label>
           <span class="status-pill"><i></i>2026 年 1 月</span>
-          <button class="button primary" data-view-jump="payroll-workbench">进入薪酬核算</button>
         </div>
       </header>
 
       <section class="view active" id="view-business-dashboard"><div id="business-dashboard-root"></div></section>
+      <section class="view" id="view-executive-dashboard"><div id="executive-dashboard-root"></div></section>
+      <section class="view" id="view-executive-summary"><div id="executive-summary-root"></div></section>
+      <section class="view" id="view-product-line-alerts"><div id="product-line-alerts-root"></div></section>
+      <section class="view" id="view-budget-attainment"><div id="budget-attainment-root"></div></section>
+      <section class="view" id="view-collection-dashboard"><div id="collection-dashboard-root"></div></section>
+      <section class="view" id="view-revenue-collection"><div id="revenue-collection-root"></div></section>
+      <section class="view" id="view-cost-collection"><div id="cost-collection-root"></div></section>
+      <section class="view" id="view-dingtalk-expense-collection"><div id="dingtalk-expense-collection-root"></div></section>
+      <section class="view" id="view-matching-rules"><div id="matching-rules-root"></div></section>
+      <section class="view" id="view-collection-exceptions"><div id="collection-exceptions-root"></div></section>
+      <section class="view" id="view-collection-logs"><div id="collection-logs-root"></div></section>
       <section class="view" id="view-product-accounting"><div id="product-accounting-root"></div></section>
+      <section class="view" id="view-cost-dashboard-v2"><div id="cost-dashboard-v2-root"></div></section>
+      <section class="view" id="view-direct-costs"><div id="direct-costs-root"></div></section>
+      <section class="view" id="view-labor-costs"><div id="labor-costs-root"></div></section>
+      <section class="view" id="view-expense-costs"><div id="expense-costs-root"></div></section>
+      <section class="view" id="view-shared-cost-pool"><div id="shared-cost-pool-root"></div></section>
       <section class="view" id="view-expense-collection"><div id="expense-collection-root"></div></section>
       <section class="view" id="view-allocation-rules"><div id="allocation-rules-root"></div></section>
       <section class="view" id="view-dashboard"><div id="dashboard-root"></div></section>

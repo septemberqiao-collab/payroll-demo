@@ -9,6 +9,22 @@
   let payrollRunVersion = data.payrollRuns[0]?.version || "P0";
 
   const pageMeta = {
+    "executive-dashboard":["经营驾驶舱","EXECUTIVE REPORTING"],
+    "executive-summary":["经营分析摘要","EXECUTIVE REPORTING"],
+    "product-line-alerts":["产品线预警","EXECUTIVE REPORTING"],
+    "budget-attainment":["预算达成","EXECUTIVE REPORTING"],
+    "collection-dashboard":["采集工作台","DATA COLLECTION"],
+    "revenue-collection":["营收账单采集","DATA COLLECTION"],
+    "cost-collection":["成本账单采集","DATA COLLECTION"],
+    "dingtalk-expense-collection":["钉钉费用采集","DATA COLLECTION"],
+    "matching-rules":["数据匹配规则","DATA COLLECTION"],
+    "collection-exceptions":["异常数据处理","DATA COLLECTION"],
+    "collection-logs":["采集日志","DATA COLLECTION"],
+    "cost-dashboard-v2":["成本工作台","COST MANAGEMENT"],
+    "direct-costs":["直接成本","COST MANAGEMENT"],
+    "labor-costs":["人工成本","COST MANAGEMENT"],
+    "expense-costs":["费用成本","COST MANAGEMENT"],
+    "shared-cost-pool":["公共成本池","COST MANAGEMENT"],
     "business-dashboard":["经营核算工作台","GROUP BUSINESS ACCOUNTING"],
     "product-accounting":["产品线核算","PRODUCT LINE P&L"],
     "expense-collection":["费用归集","EXPENSE COLLECTION"],
@@ -54,6 +70,157 @@
 
   function metric(label,value,note,good=false) {
     return `<article class="metric-card"><span>${label}</span><strong>${value}</strong><small class="${good?"good":""}">${note}</small></article>`;
+  }
+
+  function warningBadge(level) {
+    const label = level === "red" ? "红色预警" : level === "yellow" ? "黄色关注" : "绿色健康";
+    const cls = level === "red" ? "danger" : level === "yellow" ? "warning" : "success";
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function renderExecutiveDashboard(){
+    const report = payroll.calculateExecutiveReport(data, "2026-01");
+    const topRows = [...report.alertRows].sort((a,b)=>b.netProfit-a.netProfit);
+    const riskRows = report.alertRows.filter(row=>row.warningLevel!=="green");
+    document.getElementById("executive-dashboard-root").innerHTML =
+      sectionHeader("EXECUTIVE REPORTING","高层经营驾驶舱","结论先行：3 分钟看懂本月经营结果、风险和建议动作。",`<button class="button ghost" data-view-jump="executive-summary">查看分析摘要</button><button class="button primary" data-view-jump="budget-attainment">查看预算达成</button>`) +
+      `<div class="metric-grid">
+        ${metric("本月收入",payroll.formatCurrency(report.totals.revenue),"来自营收账单采集",true)}
+        ${metric("本月毛利",payroll.formatCurrency(report.totals.grossProfit),`毛利率 ${(report.totals.grossProfitRate*100).toFixed(1)}%`,true)}
+        ${metric("本月费用",payroll.formatCurrency(report.totals.expense),"费用 + 公共分摊")}
+        ${metric("本月净利",payroll.formatCurrency(report.totals.netProfit),`净利率 ${(report.totals.netProfitRate*100).toFixed(1)}%`,true)}
+        ${metric("预算完成率",`${(report.totals.budgetCompletionRate*100).toFixed(1)}%`,"按产品线收入预算均值")}
+        ${metric("风险提示",`${report.totals.alertCount} 项`,`异常数据 ${report.totals.exceptionCount} 条`)}
+      </div>
+      <div class="dashboard-grid">
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">MONTHLY CONCLUSION</p><h3>本月经营结论</h3></div><span class="badge info">高层摘要</span></div><div class="summary-list">${report.executiveSummary.map(item=>`<div><span>${item}</span></div>`).join("")}</div></article>
+        <article class="panel"><div class="panel-head"><div><p class="eyebrow">RISK</p><h3>关键风险提示</h3></div><button class="text-button" data-view-jump="product-line-alerts">查看预警</button></div><div class="todo-list">${(riskRows.length?riskRows:report.alertRows.slice(0,2)).map(row=>`<div class="todo"><span class="todo-icon ${row.warningLevel==="red"?"orange":row.warningLevel==="yellow"?"orange":"green"}">${row.lineName[0]}</span><div><strong>${row.lineName} · ${row.warningReason}</strong><span>${row.actionSuggestion}</span></div></div>`).join("")}</div></article>
+      </div>
+      <article class="panel wide" style="margin-top:14px"><div class="panel-head"><div><p class="eyebrow">CONTRIBUTION</p><h3>产品线净利贡献排行</h3></div><button class="text-button" data-view-jump="product-accounting">追溯产品线明细</button></div><div class="bar-chart">${topRows.map(row=>`<div class="bar-row"><label>${row.lineName}</label><div class="bar-track"><div class="bar-fill" style="width:${Math.max(8,row.netProfit/Math.max(topRows[0].netProfit,1)*100)}%;background:${row.color}"></div></div><strong>${payroll.formatCurrency(row.netProfit)}</strong></div>`).join("")}</div></article>`;
+  }
+
+  function renderExecutiveSummary(){
+    const report = payroll.calculateExecutiveReport(data, "2026-01");
+    const sections = [
+      ["总体经营表现", report.executiveSummary[0]],
+      ["收入变化说明", "收入来自营收账单采集，已按平台账号和产品线完成匹配。"],
+      ["成本变化说明", "直接成本由业务账单提供，人工成本由薪酬核算带入，公共成本已进入分摊池。"],
+      ["毛利率变化说明", report.executiveSummary[1]],
+      ["净利率变化说明", report.executiveSummary[2]],
+      ["重点产品线说明", report.executiveSummary[3]],
+      ["下月关注事项", report.executiveSummary[4]]
+    ];
+    document.getElementById("executive-summary-root").innerHTML =
+      sectionHeader("EXECUTIVE REPORTING","经营分析摘要","自动形成月度汇报文字框架，财务可在此基础上补充业务原因。",`<button class="button ghost">复制摘要</button><button class="button primary">模拟生成汇报稿</button>`) +
+      `<div class="cards-grid">${sections.map((item,index)=>`<article class="settings-card"><span class="badge info">${index+1}</span><h3>${item[0]}</h3><p>${item[1]}</p></article>`).join("")}</div>`;
+  }
+
+  function renderProductLineAlerts(){
+    const report = payroll.calculateExecutiveReport(data, "2026-01");
+    document.getElementById("product-line-alerts-root").innerHTML =
+      sectionHeader("EXECUTIVE REPORTING","产品线预警","用红黄绿状态展示每条产品线的经营健康度，并给出建议动作。",`<button class="button ghost" data-view-jump="collection-exceptions">查看异常数据</button>`) +
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>产品线</th><th>收入</th><th>毛利率</th><th>净利率</th><th>成本率</th><th>状态</th><th>预警原因</th><th>建议动作</th></tr></thead><tbody>${report.alertRows.map(row=>`<tr><td><span class="dot" style="background:${row.color}"></span>${row.lineName}</td><td>${payroll.formatCurrency(row.revenue)}</td><td>${(row.grossProfitRate*100).toFixed(1)}%</td><td>${(row.netProfitRate*100).toFixed(1)}%</td><td>${(row.totalCostRate*100).toFixed(1)}%</td><td>${warningBadge(row.warningLevel)}</td><td>${row.warningReason}</td><td>${row.actionSuggestion}</td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderBudgetAttainment(){
+    const report = payroll.calculateExecutiveReport(data, "2026-01");
+    document.getElementById("budget-attainment-root").innerHTML =
+      sectionHeader("EXECUTIVE REPORTING","预算达成","展示预算 vs 实际、完成率、偏差金额和偏差原因。",`<button class="button ghost">导入预算</button><button class="button primary">模拟导出预算分析</button>`) +
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>产品线</th><th>实际收入</th><th>收入预算</th><th>完成率</th><th>收入偏差</th><th>实际净利</th><th>净利目标</th><th>净利偏差</th><th>状态</th><th>偏差原因</th></tr></thead><tbody>${report.budgetAttainmentRows.map(row=>`<tr><td>${row.lineName}</td><td>${payroll.formatCurrency(row.revenue)}</td><td>${payroll.formatCurrency(row.revenueBudget)}</td><td>${(row.budgetCompletionRate*100).toFixed(1)}%</td><td>${payroll.formatCurrency(row.varianceAmount)}</td><td>${payroll.formatCurrency(row.netProfit)}</td><td>${payroll.formatCurrency(row.netProfitTarget)}</td><td>${payroll.formatCurrency(row.netProfitVariance)}</td><td><span class="badge ${row.attainmentStatus==="达成"?"success":row.attainmentStatus==="基本达成"?"warning":"danger"}">${row.attainmentStatus}</span></td><td>${row.varianceReason||"—"}</td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderCollectionDashboard(){
+    const revenueDone=data.revenueCollectionRows.filter(r=>r.matchStatus==="已匹配").length;
+    const costDone=data.costCollectionRows.filter(r=>r.auditStatus==="已审核").length;
+    const dingtalkDone=data.dingtalkExpenseRows.filter(r=>r.approvalStatus==="审批完成").length;
+    const totalItems=data.revenueCollectionRows.length+data.costCollectionRows.length+data.dingtalkExpenseRows.length;
+    const matched=revenueDone+costDone+dingtalkDone;
+    document.getElementById("collection-dashboard-root").innerHTML=
+      sectionHeader("DATA COLLECTION","数据采集中心","把平台对账单、业务成本账单、钉钉费用和薪资结果先采集、校验、匹配，再进入经营核算。",`<button class="button ghost">导入账单</button><button class="button primary">同步钉钉费用</button>`)+
+      `<div class="metric-grid">
+        ${metric("营收账单",`${revenueDone}/${data.revenueCollectionRows.length}`,"平台对账单已匹配",true)}
+        ${metric("成本账单",`${costDone}/${data.costCollectionRows.length}`,"业务账单审核进度")}
+        ${metric("钉钉费用",`${dingtalkDone}/${data.dingtalkExpenseRows.length}`,"审批完成后入费用池")}
+        ${metric("产品线匹配率",`${Math.round(matched/totalItems*100)}%`,"未匹配进入异常处理",true)}
+        ${metric("异常数据",`${data.collectionExceptionRows.length} 条`,"待财务/业务补充")}
+        ${metric("薪资数据","已计算","内部自动带入人工成本",true)}
+      </div>
+      <div class="dashboard-grid"><article class="panel"><div class="panel-head"><div><p class="eyebrow">FLOW</p><h3>采集流程</h3></div><span class="badge info">半自动 Demo</span></div><div class="workflow">
+        ${[["营收账单","平台下载后导入","revenue-collection","done"],["成本账单","业务上传并审核","cost-collection","current"],["钉钉费用","审批完成后同步","dingtalk-expense-collection","done"],["匹配规则","自动识别产品线","matching-rules","done"],["异常处理","未匹配数据补充","collection-exceptions","current"],["进入核算","输出到成本管理","cost-dashboard-v2",""]].map((item,i)=>`<button class="workflow-card ${item[3]}" data-view-jump="${item[2]}"><b>${i+1}</b><strong>${item[0]}</strong><span>${item[1]}</span></button>`).join("")}
+      </div></article><article class="panel"><div class="panel-head"><div><p class="eyebrow">LATEST LOGS</p><h3>最近采集日志</h3></div><button class="text-button" data-view-jump="collection-logs">查看全部</button></div><div class="todo-list">${data.collectionLogs.slice(0,4).map(log=>`<div class="todo"><span class="todo-icon ${log.exceptions?"orange":"green"}">${log.source[0]}</span><div><strong>${log.source} · ${log.action}</strong><span>${log.success} 条成功 / ${log.exceptions} 条异常 · ${log.operatedAt}</span></div></div>`).join("")}</div></article></div>`;
+  }
+
+  function renderRevenueCollection(){
+    document.getElementById("revenue-collection-root").innerHTML=
+      sectionHeader("DATA COLLECTION","营收账单采集","各平台下载对账单后导入，系统按账号/项目自动匹配公司和产品线。",`<button class="button primary">导入营收账单</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>月份</th><th>平台</th><th>账号/项目</th><th>公司</th><th>产品线</th><th>收入金额</th><th>手续/通道费</th><th>税费</th><th>结算金额</th><th>匹配状态</th></tr></thead><tbody>${data.revenueCollectionRows.map(row=>`<tr><td>${row.month}</td><td>${row.platform}</td><td>${row.account}</td><td>${companyMap[row.companyId]?.shortName}</td><td>${lineMap[row.lineId]?.name}</td><td>${payroll.formatCurrency(row.income)}</td><td>${payroll.formatCurrency(row.channelFee)}</td><td>${payroll.formatCurrency(row.taxFee)}</td><td>${payroll.formatCurrency(row.settlementAmount)}</td><td><span class="badge success">${row.matchStatus}</span></td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderCostCollection(){
+    document.getElementById("cost-collection-root").innerHTML=
+      sectionHeader("DATA COLLECTION","成本账单采集","业务人员提交供应商账单，财务审核后进入直接成本或公共成本池。",`<button class="button primary">上传成本账单</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>月份</th><th>部门</th><th>供应商</th><th>成本类型</th><th>公司</th><th>产品线</th><th>金额</th><th>公共成本</th><th>审核状态</th></tr></thead><tbody>${data.costCollectionRows.map(row=>`<tr><td>${row.month}</td><td>${row.department}</td><td>${row.supplier}</td><td>${row.costType}</td><td>${companyMap[row.companyId]?.shortName}</td><td>${lineMap[row.lineId]?.name||"公共成本池"}</td><td>${payroll.formatCurrency(row.amount)}</td><td>${row.isShared?"是":"否"}</td><td><span class="badge ${row.auditStatus==="已审核"?"success":"warning"}">${row.auditStatus}</span></td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderDingTalkExpenseCollection(){
+    document.getElementById("dingtalk-expense-collection-root").innerHTML=
+      sectionHeader("DATA COLLECTION","钉钉费用采集","同步钉钉审批/报销数据，按费用类型、部门和产品线进入费用成本。",`<button class="button primary">同步钉钉费用</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>审批单号</th><th>申请人</th><th>部门</th><th>费用类型</th><th>公司</th><th>产品线</th><th>金额</th><th>公共费用</th><th>审批状态</th></tr></thead><tbody>${data.dingtalkExpenseRows.map(row=>`<tr><td>${row.id}</td><td>${row.applicant}</td><td>${row.department}</td><td>${row.expenseType}</td><td>${companyMap[row.companyId]?.shortName}</td><td>${lineMap[row.lineId]?.name||"公共费用池"}</td><td>${payroll.formatCurrency(row.amount)}</td><td>${row.isShared?"是":"否"}</td><td><span class="badge ${row.approvalStatus==="审批完成"?"success":"warning"}">${row.approvalStatus}</span></td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderMatchingRules(){
+    document.getElementById("matching-rules-root").innerHTML=
+      sectionHeader("DATA COLLECTION","数据匹配规则","通过账号、供应商、部门、员工和费用类型规则，自动匹配产品线与成本归属。",`<button class="button primary">+ 新增规则</button>`)+
+      `<div class="cards-grid">${data.dataMatchingRules.map(rule=>`<article class="settings-card"><span class="badge success">${rule.status}</span><h3>${rule.type}</h3><p>${rule.source} → ${rule.targetName}</p><p>目标：${rule.target}</p></article>`).join("")}</div>`;
+  }
+
+  function renderCollectionExceptions(){
+    document.getElementById("collection-exceptions-root").innerHTML=
+      sectionHeader("DATA COLLECTION","异常数据处理","无法自动匹配或审批未完成的数据先进入异常池，处理后再进入核算。",`<button class="button primary">批量处理</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>来源</th><th>异常类型</th><th>说明</th><th>金额</th><th>状态</th><th>处理动作</th></tr></thead><tbody>${data.collectionExceptionRows.map(row=>`<tr><td>${row.source}</td><td>${row.issue}</td><td>${row.description}</td><td>${payroll.formatCurrency(row.amount)}</td><td><span class="badge warning">${row.status}</span></td><td><button class="row-action">补充规则</button></td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderCollectionLogs(){
+    document.getElementById("collection-logs-root").innerHTML=
+      sectionHeader("DATA COLLECTION","采集日志","记录每次导入、同步、覆盖和异常情况，便于月结追溯。",`<button class="button ghost">导出日志</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>来源</th><th>动作</th><th>操作人</th><th>时间</th><th>成功</th><th>异常</th><th>模式</th><th>状态</th></tr></thead><tbody>${data.collectionLogs.map(row=>`<tr><td>${row.source}</td><td>${row.action}</td><td>${row.operator}</td><td>${row.operatedAt}</td><td>${row.success}</td><td>${row.exceptions}</td><td>${row.mode}</td><td><span class="badge ${row.exceptions?"warning":"success"}">${row.status}</span></td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderCostManagementDashboard(){
+    const cost=payroll.calculateCostManagement(data,"2026-01");
+    const sorted=[...cost.rows].sort((a,b)=>b.totalCost-a.totalCost);
+    const max=Math.max(...sorted.map(row=>row.totalCost),1);
+    document.getElementById("cost-dashboard-v2-root").innerHTML=
+      sectionHeader("COST MANAGEMENT","成本工作台","汇总直接成本、人工成本、费用成本和公共分摊成本，并输出到产品线经营分析。",`<button class="button ghost">导入成本</button><button class="button primary">生成成本月结</button>`)+
+      `<div class="metric-grid">${metric("总成本",payroll.formatCurrency(cost.totals.totalCost),`成本率 ${(cost.totals.totalCostRate*100).toFixed(1)}%`,true)}${metric("直接成本",payroll.formatCurrency(cost.totals.directCost),"业务账单提供")}${metric("人工成本",payroll.formatCurrency(cost.totals.laborCost),"薪酬核算带入")}${metric("费用成本",payroll.formatCurrency(cost.totals.departmentExpense),"钉钉费用归集")}${metric("公共分摊成本",payroll.formatCurrency(cost.totals.allocatedExpense),"按营收占比分摊")}${metric("净利",payroll.formatCurrency(cost.totals.netProfit),`净利率 ${(cost.totals.netProfitRate*100).toFixed(1)}%`,true)}</div>
+      <div class="chart-layout"><article class="panel"><div class="panel-head"><div><p class="eyebrow">COST RANKING</p><h3>产品线成本排行</h3></div></div><div class="bar-chart">${sorted.map(row=>`<div class="bar-row"><label>${row.lineName}</label><div class="bar-track"><div class="bar-fill" style="width:${Math.max(8,row.totalCost/max*100)}%;background:${row.color}"></div></div><strong>${payroll.formatCurrency(row.totalCost)}</strong></div>`).join("")}</div></article><article class="panel"><div class="panel-head"><div><p class="eyebrow">COST MIX</p><h3>成本结构</h3></div></div><div class="summary-list"><div><span>直接成本</span><strong>${payroll.formatCurrency(cost.totals.directCost)}</strong></div><div><span>人工成本</span><strong>${payroll.formatCurrency(cost.totals.laborCost)}</strong></div><div><span>费用成本</span><strong>${payroll.formatCurrency(cost.totals.departmentExpense)}</strong></div><div><span>公共分摊</span><strong>${payroll.formatCurrency(cost.totals.allocatedExpense)}</strong></div></div></article></div>`;
+  }
+
+  function renderDirectCosts(){
+    document.getElementById("direct-costs-root").innerHTML=
+      sectionHeader("COST MANAGEMENT","直接成本","直接归属于产品线的云资源、渠道分成、广告流量和交付外包成本。",`<button class="button primary">+ 新增直接成本</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>月份</th><th>公司</th><th>产品线</th><th>成本类型</th><th>金额</th><th>来源</th></tr></thead><tbody>${data.monthlyDirectCostRecords.map(row=>`<tr><td>${row.month}</td><td>${companyMap[row.companyId]?.shortName}</td><td>${lineMap[row.lineId]?.name}</td><td>${row.category}</td><td>${payroll.formatCurrency(row.amount)}</td><td>${row.source}</td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderLaborCosts(){
+    const rows=payroll.calculateGroupPayroll(data.employees,data.monthlyContributionSnapshots,"2026-01",data.monthlyPerformanceRecords);
+    document.getElementById("labor-costs-root").innerHTML=
+      sectionHeader("COST MANAGEMENT","人工成本","薪酬核算负责怎么算，成本管理负责看人工成本进入产品线还是公共人工成本池。",`<button class="button ghost">同步薪酬结果</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>员工</th><th>公司</th><th>部门</th><th>产品线/成本池</th><th>工资总额</th><th>企业承担成本</th><th>归集方式</th></tr></thead><tbody>${rows.map(row=>{const e=data.employees.find(x=>x.id===row.id);return `<tr><td>${employeeCell(row)}</td><td>${companyMap[row.companyId]?.shortName}</td><td>${row.department}</td><td>${e.costAttribution==="sharedLaborPool"?"公共人工成本池":e.allocations.map(a=>lineMap[a.lineId]?.name+" "+a.percent+"%").join(" / ")}</td><td>${payroll.formatCurrency(row.salaryTotal)}</td><td>${payroll.formatCurrency(row.employerCost)}</td><td><span class="badge ${e.costAttribution==="sharedLaborPool"?"warning":"success"}">${e.costAttribution==="sharedLaborPool"?"公共人工成本池":"直接计入产品线"}</span></td></tr>`}).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderExpenseCosts(){
+    document.getElementById("expense-costs-root").innerHTML=
+      sectionHeader("COST MANAGEMENT","费用成本","市场、差旅、办公、研发、行政等费用从费用归集和钉钉审批带入。",`<button class="button ghost">同步费用归集</button>`)+
+      `<article class="panel wide"><div class="table-wrap"><table><thead><tr><th>月份</th><th>公司</th><th>部门</th><th>费用类型</th><th>金额</th><th>归集方式</th><th>产品线</th></tr></thead><tbody>${data.monthlyExpenseRecords.map(row=>`<tr><td>${row.month}</td><td>${companyMap[row.companyId]?.shortName}</td><td>${row.department}</td><td>${row.expenseType}</td><td>${payroll.formatCurrency(row.amount)}</td><td>${row.allocationMode==="shared"?"公共费用池":"直接计入"}</td><td>${lineMap[row.lineId]?.name||"公共费用池"}</td></tr>`).join("")}</tbody></table></div></article>`;
+  }
+
+  function renderSharedCostPool(){
+    const cost=payroll.calculateCostManagement(data,"2026-01");
+    const pools=[{type:"共享人工成本池",source:"薪酬核算",amount:cost.sharedLaborPool,method:"按营收占比",status:"已分摊"},{type:"公共部门费用池",source:"钉钉费用/费用归集",amount:cost.sharedExpenses,method:"按营收占比",status:"已分摊"},{type:"公共办公费用池",source:"行政费用",amount:data.monthlyExpenseRecords.filter(r=>r.allocationMode==="shared"&&r.expenseType==="办公费用").reduce((s,r)=>s+r.amount,0),method:"按营收占比",status:"已分摊"}];
+    document.getElementById("shared-cost-pool-root").innerHTML=
+      sectionHeader("COST MANAGEMENT","公共成本池","公共人员和共享费用先进入成本池，再按规则分摊到各产品线。",`<button class="button primary">查看分摊明细</button>`)+
+      `<div class="cards-grid">${pools.map(pool=>`<article class="settings-card"><span class="badge success">${pool.status}</span><h3>${pool.type}</h3><p>${pool.source}</p><p>金额：<strong>${payroll.formatCurrency(pool.amount)}</strong></p><p>规则：${pool.method}</p></article>`).join("")}</div>`;
   }
 
   function renderAccountingTable(rows){
@@ -258,7 +425,7 @@
   }
 
   function renderAll() {
-    renderBusinessDashboard();renderProductAccounting();renderExpenseCollection();renderAllocationRules();renderDashboard();renderPayrollWorkbench();renderSalaryProfiles();renderSpecialDeductions();renderAnnualTax();renderTaxEntities();renderPersonReporting();renderPayslipBatches();renderConfirmations();renderInsuredEmployees();renderSocialBills();renderCostDashboard();renderPayrollReports();renderGroupSettings();
+    renderExecutiveDashboard();renderExecutiveSummary();renderProductLineAlerts();renderBudgetAttainment();renderCollectionDashboard();renderRevenueCollection();renderCostCollection();renderDingTalkExpenseCollection();renderMatchingRules();renderCollectionExceptions();renderCollectionLogs();renderCostManagementDashboard();renderDirectCosts();renderLaborCosts();renderExpenseCosts();renderSharedCostPool();renderBusinessDashboard();renderProductAccounting();renderExpenseCollection();renderAllocationRules();renderDashboard();renderPayrollWorkbench();renderSalaryProfiles();renderSpecialDeductions();renderAnnualTax();renderTaxEntities();renderPersonReporting();renderPayslipBatches();renderConfirmations();renderInsuredEmployees();renderSocialBills();renderCostDashboard();renderPayrollReports();renderGroupSettings();
   }
 
   function openModal(html){document.getElementById("modal-content").innerHTML=html;document.getElementById("detail-modal").classList.add("open")}
